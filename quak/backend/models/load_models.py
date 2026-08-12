@@ -8,8 +8,14 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 import logging
-import faiss
-from sentence_transformers import SentenceTransformer
+try:
+    import faiss
+    from sentence_transformers import SentenceTransformer
+    EMBEDDING_AVAILABLE = True
+except ImportError:
+    faiss = None
+    SentenceTransformer = None
+    EMBEDDING_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +135,7 @@ class ModelLoader:
         
         return vectorizer, vectors, metadata
     
-    def load_embedding_model(self) -> SentenceTransformer:
+    def load_embedding_model(self) -> Any:
         """
         Load the Sentence-BERT embedding model.
         
@@ -139,6 +145,9 @@ class ModelLoader:
         Raises:
             Exception: If loading fails
         """
+        if not EMBEDDING_AVAILABLE:
+            raise RuntimeError("sentence-transformers is not installed")
+            
         if self._embedding_model is not None:
             return self._embedding_model
             
@@ -178,7 +187,7 @@ class ModelLoader:
             logger.error(f"Failed to load embedding vectors: {e}")
             raise
     
-    def load_faiss_index(self) -> faiss.Index:
+    def load_faiss_index(self) -> Any:
         """
         Load the FAISS index for efficient similarity search.
         
@@ -189,6 +198,9 @@ class ModelLoader:
             FileNotFoundError: If index file doesn't exist
             Exception: If loading fails
         """
+        if not EMBEDDING_AVAILABLE:
+            raise RuntimeError("faiss is not installed")
+            
         if self._faiss_index is not None:
             return self._faiss_index
             
@@ -233,13 +245,15 @@ class ModelLoader:
             logger.error(f"Failed to load embedding metadata: {e}")
             raise
     
-    def load_all_embedding_components(self) -> Tuple[SentenceTransformer, np.ndarray, faiss.Index, List[Dict[str, Any]], Dict[str, Any]]:
+    def load_all_embedding_components(self) -> Tuple[Any, np.ndarray, Any, List[Dict[str, Any]], Dict[str, Any]]:
         """
         Load all embedding model components at once.
         
         Returns:
             Tuple of (embedding_model, embedding_vectors, faiss_index, recipe_metadata, embedding_metadata)
         """
+        if not EMBEDDING_AVAILABLE:
+            raise RuntimeError("Embedding models are not available because sentence-transformers/faiss are not installed.")
         embedding_model = self.load_embedding_model()
         embedding_vectors = self.load_embedding_vectors()
         faiss_index = self.load_faiss_index()

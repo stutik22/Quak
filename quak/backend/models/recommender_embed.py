@@ -4,8 +4,14 @@ Provides ingredient-based recipe matching using Sentence-BERT embeddings and FAI
 """
 
 import numpy as np
-import faiss
-from sentence_transformers import SentenceTransformer
+try:
+    import faiss
+    from sentence_transformers import SentenceTransformer
+    EMBEDDING_AVAILABLE = True
+except ImportError:
+    faiss = None
+    SentenceTransformer = None
+    EMBEDDING_AVAILABLE = False
 from typing import List, Dict, Any, Tuple, Optional
 import logging
 import time
@@ -37,6 +43,9 @@ class EmbeddingRecommender:
     
     def load_models(self):
         """Load all required models and data."""
+        if not EMBEDDING_AVAILABLE:
+            raise RuntimeError("Embedding recommender is not available (sentence-transformers/faiss are not installed).")
+            
         if self._is_loaded:
             return
             

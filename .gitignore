@@ -157,6 +157,9 @@ backend/models/*.npz
 backend/models/*.npy
 backend/models/*.bin
 !backend/models/__init__.py
+!backend/models/vectorizer.pkl
+!backend/models/recipe_metadata.pkl
+!backend/models/recipe_vectors_tfidf.npz
 
 # Environment configurations
 .env
