@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python caches
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# Model outputs (mounted instead for development)
+quak/backend/models/*.npy
+quak/backend/models/*.bin
+quak/backend/models/*.pkl
+quak/backend/models/*.npz
+
+# Docker configurations
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+docs/
+README*.md
+*.bat
+*.sh

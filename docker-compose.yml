@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Redis cache service
+  redis:
+    image: redis:7-alpine
+    container_name: qwak-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - qwak-network
+
+  # Backend API service (FastAPI)
+  backend:
+    build:
+      context: ./quak/backend
+      dockerfile: Dockerfile
+    container_name: qwak-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - QWAK_DEBUG=true
+      - QWAK_ENABLE_REDIS_CACHE=true
+      - QWAK_REDIS_HOST=redis
+      - QWAK_REDIS_PORT=6379
+      - QWAK_PRELOAD_MODELS=true
+      - QWAK_ENABLE_CACHING=true
+    volumes:
+      # Mount models directory from host to backend container
+      - ./quak/backend/models:/app/models:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - qwak-network
+    restart: unless-stopped
+
+  # Frontend UI service (Streamlit)
+  frontend:
+    build:
+      context: ./quak/frontend
+      dockerfile: Dockerfile
+    container_name: qwak-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - QWAK_BACKEND_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - qwak-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  qwak-network:
+    driver: bridge

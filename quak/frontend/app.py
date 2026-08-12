@@ -6,9 +6,10 @@ import requests
 import json
 from typing import List, Dict, Optional
 import time
+import os
 
 # Configuration
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("QWAK_BACKEND_URL", "http://localhost:8000")
 DEFAULT_MAX_RESULTS = 10
 
 # Page configuration
